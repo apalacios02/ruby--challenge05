@@ -8,23 +8,30 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
-require 'faker'
-require "csv" 
+require 'csv'
 
-# Seed categories
-categories = {}
+# Clear existing data
+Product.destroy_all
+Category.destroy_all
 
-CSV.foreach(Rails.root.join('db', 'products.csv'), headers: true) do |row|
+# Seed categories and products from CSV
+csv_file = Rails.root.join('db', 'products.csv')
+csv_data = File.read(csv_file)
+
+products = CSV.parse(csv_data, headers: true)
+
+products.each do |row|
   category_name = row['category_name'].strip
-  unless categories.key?(category_name)
-    categories[category_name] = Category.create!(name: category_name)
-  end
 
+  # Find or create category
+  category = Category.find_or_create_by(name: category_name)
+
+  # Create product associated with the category
   Product.create!(
     title: row['title'],
     description: row['description'],
     price: row['price'].to_d,
     stock_quantity: row['stock_quantity'].to_i,
-    category: categories[category_name]
+    category: category
   )
 end
