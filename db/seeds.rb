@@ -9,18 +9,22 @@
 #   end
 
 require 'faker'
+require "csv" 
 
-# Clear existing records
-Product.destroy_all
+# Seed categories
+categories = {}
 
-# Populate products
-676.times do
+CSV.foreach(Rails.root.join('db', 'products.csv'), headers: true) do |row|
+  category_name = row['category_name'].strip
+  unless categories.key?(category_name)
+    categories[category_name] = Category.create!(name: category_name)
+  end
+
   Product.create!(
-    title: Faker::Commerce.product_name,
-    description: Faker::Lorem.paragraph(sentence_count: 2),
-    price: Faker::Commerce.price(range: 10.0..100.0),
-    stock_quantity: Faker::Number.between(from: 1, to: 100)
+    title: row['title'],
+    description: row['description'],
+    price: row['price'].to_d,
+    stock_quantity: row['stock_quantity'].to_i,
+    category: categories[category_name]
   )
 end
-
-puts 'Products seeded successfully!'
